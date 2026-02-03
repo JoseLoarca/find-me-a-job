@@ -3,9 +3,7 @@ from pydantic import BaseModel
 
 class GoogleSearchResult(BaseModel):
     session_id: str
-    id: str
-    status: str
-    processed_at: str
+    search_id: list[str]
     query: str
 
 
