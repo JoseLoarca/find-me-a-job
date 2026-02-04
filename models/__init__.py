@@ -1,10 +1,11 @@
 from pydantic import BaseModel, Field
 
 
-class GoogleSearchResult(BaseModel):
+class GoogleSearchMetadata(BaseModel):
     session_id: str
     search_ids: list[str]
     query: str
+    total_pages: int
 
 
 class GoogleSearchOrganicResult(BaseModel):
@@ -13,6 +14,21 @@ class GoogleSearchOrganicResult(BaseModel):
     link: str
     snippet: str
     source: str
+
+
+class GoogleSearchQueryConfig(BaseModel):
+    keywords: str
+    exact_match: bool = True
+    sites: list[str] = None
+    exclude: list[str] = None
+    from_date: str = None
+    to_date: str = None
+
+
+class AppConfig(BaseModel):
+    serpapi_apikey: str
+    search_config: GoogleSearchQueryConfig
+    search_max_pages: int
 
 
 class LLMJobListingAnalysis(BaseModel):
