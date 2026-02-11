@@ -1,4 +1,4 @@
-from models import AppConfig, GoogleSearchMetadata, GoogleSearchOrganicResult, LLMJobListingAnalysis
+from models import AppConfig, GoogleSearchMetadata, GoogleSearchOrganicResult, JobPosting
 from services import JobSearch, JobAnalyzer
 
 
@@ -7,7 +7,7 @@ class Orchestrator:
     def __init__(self, config: AppConfig):
         # Initialize services
         self.config = config
-        self.search_service = JobSearch(config.serpapi_key)
+        self.search_service = JobSearch(config.serpapi_apikey)
         self.analyzer_service = JobAnalyzer()
 
     def search_for_jobs(self) -> tuple[GoogleSearchMetadata, list[GoogleSearchOrganicResult]]:
@@ -31,34 +31,45 @@ class Orchestrator:
 
         return search_metadata, organic_results
 
-    def analyze_job_listings(self, job_listings: list[GoogleSearchOrganicResult]):
+    def analyze_job_postings(self, job_postings: list[GoogleSearchOrganicResult]):
         """Analyze, extract, and enrich Google Search results
 
         Args:
-            job_listings: job listings results from Google Search
+            job_postings: job listings results from Google Search
 
         Returns: list of enriched job listings objects
 
         """
-        enriched_job_listings = []
+        enriched_job_postings = []
 
-        for job in job_listings:
-            enriched_job_listings.append(self.analyzer_service.analyze_job_listing(job).get("response"))
+        for job in job_postings:
+            enriched_job_postings.append(self.analyzer_service.analyze_job_listing(job))
 
-        return enriched_job_listings
+        return enriched_job_postings
 
-    def assess_profile_fit(self, job_listings: list[LLMJobListingAnalysis]):
+    def assess_profile_fit(self, job_postings: list[JobPosting]):
         """
 
         Args:
-            job_listings:
+            job_postings:
 
         Returns:
 
         """
-        profile_scores = []
+        assessed_job_postings = []
 
-        for job in job_listings:
-            profile_scores.append(self.analyzer_service.analyze_profile_fit(job))
+        for job in job_postings:
+            assessed_job_postings.append(self.analyzer_service.analyze_profile_fit(job))
 
-        return profile_scores
+        return assessed_job_postings
+
+    def save_jobs(self, job_postings: list[JobPosting]):
+        """
+
+        Args:
+            job_postings:
+
+        Returns:
+
+        """
+        pass

@@ -4,7 +4,7 @@ import os
 from google import genai
 from google.genai.types import GenerateContentConfig
 
-from models import GoogleSearchOrganicResult, LLMJobListingAnalysis, LLMJobFitScore
+from models import GoogleSearchOrganicResult, JobPosting, JobFitScore
 
 DEFAULT_GEMINI_MODEL = "gemini-3-flash-preview"
 DEFAULT_PROFILE_FILE_NAME = "my_profile.json"
@@ -14,7 +14,7 @@ def get_current_user_profile() -> dict:
     """Gets the current user profile. The profile contains all the necessary information (location, work exp,
     skills, personal preferences, etc.) in order to assess if a specific role is a good match for the user.
 
-    Returns: A dictionary containing the user's profile (location, work experience, skills, etc)
+    Returns: A dictionary containing the user's profile (location, work experience, skills, etc.)
 
     """
     with open(DEFAULT_PROFILE_FILE_NAME) as json_profile:
@@ -37,13 +37,13 @@ class JobAnalyzer:
 
             self.gemini_client = genai.Client()
 
-    def analyze_job_listing(self, organic_result: GoogleSearchOrganicResult):
+    def analyze_job_listing(self, organic_result: GoogleSearchOrganicResult) ->JobPosting:
         """Analyzes a job listing obtained from a Google Search using only its link.
 
         Args:
             organic_result: an organic result from a Google Search
 
-        Returns: a LLMJobListingAnalysisSchema compliant dict
+        Returns: a JobPosting instance
 
         """
         response = self.gemini_client.models.generate_content(
@@ -53,19 +53,19 @@ class JobAnalyzer:
             config=GenerateContentConfig(
                 tools=[{"url_context": {}}],
                 response_mime_type="application/json",
-                response_json_schema=LLMJobListingAnalysis.model_json_schema()
+                response_json_schema=JobPosting.model_json_schema()
             )
         )
 
-        return {"response": LLMJobListingAnalysis.model_validate_json(response.text)}
+        return JobPosting.model_validate_json(response.text)
 
-    def analyze_profile_fit(self, role: LLMJobListingAnalysis):
+    def analyze_profile_fit(self, role: JobPosting) -> JobPosting:
         """Analyzes if the current user is a good fit for a specific role using a JSON file with the user profile.
 
         Args:
             role: the role to assess
 
-        Returns: a dictionary containing the role that was assessed, and the fit score
+        Returns: the assessed role, with the fit score and feedback from the LLM
 
         """
         response = self.gemini_client.models.generate_content(
@@ -77,8 +77,11 @@ class JobAnalyzer:
             config=GenerateContentConfig(
                 tools=[get_current_user_profile],
                 response_mime_type="application/json",
-                response_json_schema=LLMJobFitScore.model_json_schema()
+                response_json_schema=JobFitScore.model_json_schema()
             )
         )
 
-        return {"role": role, "fit_assessment": response}
+        assessment = JobFitScore.model_validate_json(response.text)
+
+        return role.model_copy(update={'fit_score': assessment.fit_score,
+                                       'fit_assessment_feedback': assessment.fit_assessment_feedback})
