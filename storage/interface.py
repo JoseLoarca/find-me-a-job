@@ -6,7 +6,7 @@ from models import JobPosting
 class JobStorage(ABC):
 
     @abstractmethod
-    def save_all(self, job: JobPosting) -> None:
+    def save_all(self, jobs: list[JobPosting]) -> None:
         pass
 
     @abstractmethod

@@ -1,5 +1,7 @@
 from pydantic import BaseModel, Field
 
+from storage import JobStorage
+
 
 class GoogleSearchMetadata(BaseModel):
     session_id: str
@@ -30,6 +32,7 @@ class AppConfig(BaseModel):
     serpapi_apikey: str
     search_config: GoogleSearchQueryConfig
     search_max_pages: int
+    storage: JobStorage
 
 
 class JobPosting(BaseModel):

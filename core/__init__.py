@@ -66,13 +66,13 @@ class Orchestrator:
 
         return evald_job_postings
 
-    def save_jobs(self, job_postings: list[JobPosting]):
-        """
+    def save_jobs(self, job_postings: list[JobPosting]) -> None:
+        """Stores job postings
 
         Args:
-            job_postings:
+            job_postings: lists of job postings
 
-        Returns:
+        Returns: None
 
         """
-        pass
+        self.config.storage.save_all(job_postings)
