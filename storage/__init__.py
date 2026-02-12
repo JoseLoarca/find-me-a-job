@@ -1,2 +1,2 @@
 from dynamodb import DynamoDBStorage
-from .sqlite import SQLiteJobStorage
+from sqlite import SQLiteJobStorage

@@ -34,7 +34,7 @@ class Orchestrator:
 
         return search_metadata, organic_results
 
-    def analyze_job_postings(self, job_postings: list[GoogleSearchOrganicResult]):
+    def analyze_job_postings(self, job_postings: list[GoogleSearchOrganicResult]) -> list[GoogleSearchOrganicResult]:
         """Analyze, extract, and enrich Google Search results
 
         Args:
@@ -50,13 +50,13 @@ class Orchestrator:
 
         return enriched_job_postings
 
-    def evaluate_profile_fit(self, job_postings: list[JobPosting]):
-        """
+    def evaluate_profile_fit(self, job_postings: list[JobPosting]) -> list[JobPosting]:
+        """Run profile evaluation on job postings.
 
         Args:
-            job_postings:
+            job_postings: lists of roles to evaluate
 
-        Returns:
+        Returns: list of evaluated job postings
 
         """
         evald_job_postings = []  # eval'd as in evaluated

@@ -39,7 +39,7 @@ Job data: {role}
 
 def get_current_user_profile() -> dict:
     """Gets the current user profile. The profile contains all the necessary information (location, work exp,
-    skills, personal preferences, etc.) in order to assess if a specific role is a good match for the user.
+    skills, personal preferences, etc.) to evaluate the alignment between current user and a tech role.
 
     Returns: A dictionary containing the user's profile (location, work experience, skills, etc.)
 
