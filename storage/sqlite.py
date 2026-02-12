@@ -15,7 +15,7 @@ class SQLiteJobStorage(JobStorage):
     def _init_schema(self):
         self.conn.execute("""
             CREATE TABLE IF NOT EXISTS jobs (
-                job_id INTEGER primary key,
+                job_id TEXT primary key,
                 company_name TEXT ot null,
                 role_name  TEXT not null,
                 location TEXT not null,
@@ -38,5 +38,26 @@ class SQLiteJobStorage(JobStorage):
     def list_by_date_range(self, min_date: str, max_date: str) -> list[JobPosting]:
         pass
 
-    def save_all(self, job: JobPosting) -> None:
-        pass
+    def save_all(self, jobs: list[JobPosting]) -> None:
+        with self.conn:
+            self.conn.executemany("""
+            INSERT OR REPLACE INTO jobs VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, [
+                (
+                    job.job_id,
+                    job.company_name,
+                    job.role_name,
+                    job.location,
+                    job.job_link,
+                    job.source,
+                    job.description,
+                    job.stack,
+                    job.salary_range_posted,
+                    job.seniority,
+                    job.skills,
+                    job.additional_info,
+                    job.fit_score,
+                    job.fit_assessment_feedback
+                )
+                for job in jobs
+            ])
