@@ -1,3 +1,5 @@
+from hashlib import sha256
+
 from models import AppConfig, GoogleSearchMetadata, GoogleSearchOrganicResult, JobPosting
 from services import JobSearch, JobAnalyzer
 
@@ -26,7 +28,8 @@ class Orchestrator:
 
         organic_results = [GoogleSearchOrganicResult(position=result.get("position"),
                                                      title=result.get("title"), link=result.get("link"),
-                                                     snippet=result.get("snippet"), source=result.get("source"))
+                                                     snippet=result.get("snippet"), source=result.get("source"),
+                                                     job_id=sha256(result.get("link").encode('utf-8')).hexdigest())
                            for result in search_results.get("organic_results")]
 
         return search_metadata, organic_results
@@ -47,7 +50,7 @@ class Orchestrator:
 
         return enriched_job_postings
 
-    def assess_profile_fit(self, job_postings: list[JobPosting]):
+    def evaluate_profile_fit(self, job_postings: list[JobPosting]):
         """
 
         Args:
@@ -56,12 +59,12 @@ class Orchestrator:
         Returns:
 
         """
-        assessed_job_postings = []
+        evald_job_postings = []  # eval'd as in evaluated
 
         for job in job_postings:
-            assessed_job_postings.append(self.analyzer_service.analyze_profile_fit(job))
+            evald_job_postings.append(self.analyzer_service.evaluate_profile_fit(job))
 
-        return assessed_job_postings
+        return evald_job_postings
 
     def save_jobs(self, job_postings: list[JobPosting]):
         """
