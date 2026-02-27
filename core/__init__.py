@@ -1,6 +1,8 @@
 from hashlib import sha256
 
-from models import AppConfig, GoogleSearchMetadata, GoogleSearchOrganicResult, JobPosting
+from exceptions import AnalyzerError
+from models import AppConfig, GoogleSearchMetadata, GoogleSearchOrganicResult, JobPosting, AnalysisFailure, \
+    EvaluationFailure
 from services import JobSearch, JobAnalyzer
 from storage import JobStorage
 
@@ -36,37 +38,50 @@ class Orchestrator:
 
         return search_metadata, organic_results
 
-    def analyze_job_postings(self, job_postings: list[GoogleSearchOrganicResult]) -> list[GoogleSearchOrganicResult]:
+    def analyze_job_postings(self, job_postings: list[GoogleSearchOrganicResult]) -> tuple[
+        list[GoogleSearchOrganicResult], list[AnalysisFailure]]:
         """Analyze, extract, and enrich Google Search results
 
         Args:
             job_postings: job listings results from Google Search
 
-        Returns: list of enriched job listings objects
+        Returns: a tuple containing a list of enriched job listings and a list of failed analysis operations
 
         """
-        enriched_job_postings = []
+        enriched = []
+        failures = []
 
         for job in job_postings:
-            enriched_job_postings.append(self.analyzer_service.analyze_job_listing(job))
+            try:
+                analysis_result = self.analyzer_service.analyze_job_listing(job)
+                enriched.append(analysis_result)
+            except AnalyzerError as e:
+                failures.append(AnalysisFailure(job=job, message=str(e)))
+                continue
 
-        return enriched_job_postings
+        return enriched, failures
 
-    def evaluate_profile_fit(self, job_postings: list[JobPosting]) -> list[JobPosting]:
+    def evaluate_profile_fit(self, job_postings: list[JobPosting]) -> tuple[list[JobPosting], list[EvaluationFailure]]:
         """Run profile evaluation on job postings.
 
         Args:
             job_postings: lists of roles to evaluate
 
-        Returns: list of evaluated job postings
+        Returns: a tuple containing a list of evaluated job postings and a list of failed evaluation operations
 
         """
-        evald_job_postings = []  # eval'd as in evaluated
+        evald = []  # eval'd as in evaluated
+        failures = []
 
         for job in job_postings:
-            evald_job_postings.append(self.analyzer_service.evaluate_profile_fit(job))
+            try:
+                eval_result = self.analyzer_service.evaluate_profile_fit(job)
+                evald.append(eval_result)
+            except AnalyzerError as e:
+                failures.append(EvaluationFailure(job=job, message=str(e)))
+                continue
 
-        return evald_job_postings
+        return evald, failures
 
     def save_jobs(self, job_postings: list[JobPosting]) -> None:
         """Stores job postings
