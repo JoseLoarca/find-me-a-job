@@ -1,9 +1,10 @@
 import json
 import os
 
-from google import genai
+from google.genai import errors, Client as GeminiClient
 from google.genai.types import GenerateContentConfig
 
+from exceptions import AnalyzerError
 from models import GoogleSearchOrganicResult, JobPosting, JobFitScore
 
 DEFAULT_GEMINI_MODEL = "gemini-3-flash-preview"
@@ -57,12 +58,12 @@ class JobAnalyzer:
         # Gemini should automatically read the key from env vars, but we should allow to override the key to be used
         # If there's no key in env vars, and no key is manually passed, return an error
         if gemini_api_key:
-            self.gemini_client = genai.Client(api_key=gemini_api_key)
+            self.gemini_client = GeminiClient(api_key=gemini_api_key)
         else:
             if not os.getenv('GEMINI_API_KEY'):
-                raise Exception("Couldn't initialize client, GEMINI_API_KEY not found.")
+                raise Exception("Couldn't initialize Gemini client, GEMINI_API_KEY not found.")
 
-            self.gemini_client = genai.Client()
+            self.gemini_client = GeminiClient()
 
     def analyze_job_listing(self, organic_result: GoogleSearchOrganicResult) ->JobPosting:
         """Analyzes a job listing obtained from a Google Search using only its link.
@@ -72,18 +73,26 @@ class JobAnalyzer:
 
         Returns: a JobPosting instance
 
-        """
-        response = self.gemini_client.models.generate_content(
-            model=DEFAULT_GEMINI_MODEL,
-            contents=JOB_ANALYZER_PROMPT.format(source=organic_result.source, job_link=organic_result.link),
-            config=GenerateContentConfig(
-                tools=[{"url_context": {}}],
-                response_mime_type="application/json",
-                response_json_schema=JobPosting.model_json_schema()
-            )
-        )
+        Raises:
+            AnalyzerError: if an error occurred while analyzing the job listing
 
-        return JobPosting.model_validate_json(response.text)
+        """
+        try:
+            response = self.gemini_client.models.generate_content(
+                model=DEFAULT_GEMINI_MODEL,
+                contents=JOB_ANALYZER_PROMPT.format(source=organic_result.source, job_link=organic_result.link),
+                config=GenerateContentConfig(
+                    tools=[{"url_context": {}}],
+                    response_mime_type="application/json",
+                    response_json_schema=JobPosting.model_json_schema()
+                )
+            )
+
+            return JobPosting.model_validate_json(response.text)
+
+        except errors.APIError as e:
+            raise AnalyzerError(job_id=organic_result.job_id, code=e.code, status=e.status, message=e.message)
+
 
     def evaluate_profile_fit(self, role: JobPosting) -> JobPosting:
         """Evaluates if the current user is a good fit for a specific role.
