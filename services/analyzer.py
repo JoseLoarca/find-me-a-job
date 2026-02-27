@@ -2,9 +2,10 @@ import json
 import os
 
 from google.genai import errors, Client as GeminiClient
+from google.genai.errors import APIError
 from google.genai.types import GenerateContentConfig
 
-from exceptions import AnalyzerError
+from exceptions import AnalyzerError, EvaluationError
 from models import GoogleSearchOrganicResult, JobPosting, JobFitScore
 
 DEFAULT_GEMINI_MODEL = "gemini-3-flash-preview"
@@ -102,20 +103,26 @@ class JobAnalyzer:
 
         Returns: the evaluated role, with the fit score and feedback from the LLM
 
+        Raises:
+            EvaluationError: if an error occurred while evaluating the role
         """
-        role_for_eval = role.model_dump_json(exclude={"job_id", "job_link", "fit_score", "fit_assessment_feedback"})
+        try:
+            role_for_eval = role.model_dump_json(exclude={"job_id", "job_link", "fit_score", "fit_assessment_feedback"})
 
-        response = self.gemini_client.models.generate_content(
-            model=DEFAULT_GEMINI_MODEL,
-            contents=PROFILE_ANALYZER_PROMPT.format(role=role_for_eval),
-            config=GenerateContentConfig(
-                tools=[get_current_user_profile],
-                response_mime_type="application/json",
-                response_json_schema=JobFitScore.model_json_schema()
+            response = self.gemini_client.models.generate_content(
+                model=DEFAULT_GEMINI_MODEL,
+                contents=PROFILE_ANALYZER_PROMPT.format(role=role_for_eval),
+                config=GenerateContentConfig(
+                    tools=[get_current_user_profile],
+                    response_mime_type="application/json",
+                    response_json_schema=JobFitScore.model_json_schema()
+                )
             )
-        )
 
-        evaluation = JobFitScore.model_validate_json(response.text)
+            evaluation = JobFitScore.model_validate_json(response.text)
 
-        return role.model_copy(update={"fit_score": evaluation.fit_score,
-                                       "fit_assessment_feedback": evaluation.fit_assessment_feedback})
+            return role.model_copy(update={"fit_score": evaluation.fit_score,
+                                           "fit_assessment_feedback": evaluation.fit_assessment_feedback})
+
+        except APIError as e:
+            raise EvaluationError(job_id=role.job_id, code=e.code, status=e.status, message=e.message)
