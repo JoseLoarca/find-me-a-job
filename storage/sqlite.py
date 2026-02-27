@@ -30,7 +30,8 @@ class SQLiteJobStorage(JobStorage):
                 skills TEXT,
                 additional_info TEXT,
                 fit_score INTEGER,
-                fit_assessment_feedback text
+                fit_assessment_feedback TEXT,
+                industry TEXT
                 )
             """)
         self.conn.commit()
