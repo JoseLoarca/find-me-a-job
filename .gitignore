@@ -1,7 +1,8 @@
 # Added by me
 .idea/
 findmeajob.sqlite
-my_profile.json
+profile/latest.json
+samples/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
