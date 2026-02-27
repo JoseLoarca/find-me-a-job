@@ -61,3 +61,11 @@ class JobFitScore(BaseModel):
                                        "from 0 to 100.", ge=0, le=100)
     fit_assessment_feedback: str = Field(description="Further elaborates on the fit score. For example, "
                                                      "if a fit is considered to be 25%, explains why.")
+
+class AnalysisFailure(BaseModel):
+    job: GoogleSearchOrganicResult
+    message: str
+
+class EvaluationFailure(BaseModel):
+    job: JobPosting
+    message: str
