@@ -1,2 +1,2 @@
-from search import JobSearch
-from analyzer import JobAnalyzer
+from .search import JobSearch
+from .analyzer import JobAnalyzer

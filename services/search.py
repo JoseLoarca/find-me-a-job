@@ -25,7 +25,7 @@ def _build_search_query(query_config: GoogleSearchQueryConfig) -> str:
     else:
         sites_query = ""
 
-    from_query = f'before:{query_config.from_date}' if query_config.from_date else ""
+    from_query = f'after:{query_config.from_date}' if query_config.from_date else ""
     to_query = f'before:{query_config.to_date}' if query_config.to_date else ""
 
     return f'{keywords_query} {exclude_query} {sites_query} {from_query} {to_query}'.strip()
@@ -36,7 +36,7 @@ class JobSearch:
 
     def __init__(self, api_key: str):
         self.client = serpapi.Client(api_key=api_key)
-        self.session_id = uuid4()
+        self.session_id = str(uuid4())
         self.engine = "google"
         self.location = "United States"
         self.google_domain = "google.com"
@@ -69,7 +69,7 @@ class JobSearch:
         return {"session_id": self.session_id,
                 "search_ids": search_ids,
                 "query": search_query,
-                "total_pages": len(organic_results),
+                "total_pages": int(len(organic_results) / max_pages),
                 "organic_results": organic_results}
 
     def _get_search_params(self, search_query: str) -> dict:
