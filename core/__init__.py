@@ -2,15 +2,17 @@ from hashlib import sha256
 
 from models import AppConfig, GoogleSearchMetadata, GoogleSearchOrganicResult, JobPosting
 from services import JobSearch, JobAnalyzer
+from storage import JobStorage
 
 
 class Orchestrator:
 
-    def __init__(self, config: AppConfig):
+    def __init__(self, config: AppConfig, storage: JobStorage):
         # Initialize services
         self.config = config
+        self.storage = storage
         self.search_service = JobSearch(config.serpapi_apikey)
-        self.analyzer_service = JobAnalyzer()
+        self.analyzer_service = JobAnalyzer(gemini_api_key=config.gemini_api_key)
 
     def search_for_jobs(self) -> tuple[GoogleSearchMetadata, list[GoogleSearchOrganicResult]]:
         """Searches for jobs
@@ -75,4 +77,4 @@ class Orchestrator:
         Returns: None
 
         """
-        self.config.storage.save_all(job_postings)
+        self.storage.save_all(job_postings)
