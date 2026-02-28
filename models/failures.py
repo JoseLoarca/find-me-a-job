@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 
-from models import GoogleSearchOrganicResult, JobPosting
+from .search import GoogleSearchOrganicResult
+from .job import JobPosting
 
 
 class AnalysisFailure(BaseModel):

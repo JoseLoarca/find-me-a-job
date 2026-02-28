@@ -15,3 +15,4 @@ class AppConfig(BaseModel):
     search_config: GoogleSearchQueryConfig
     search_max_pages: int
     gemini_api_key: str | None = None
+    profile_path: str | None = None
