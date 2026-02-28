@@ -1,6 +1,6 @@
 from hashlib import sha256
 
-from exceptions import AnalyzerError
+from exceptions import AnalyzerError, FailedSearch
 from models import AppConfig, GoogleSearchMetadata, GoogleSearchOrganicResult, JobPosting, AnalysisFailure, \
     EvaluationFailure
 from services import JobSearch, JobAnalyzer
@@ -16,27 +16,32 @@ class Orchestrator:
         self.search_service = JobSearch(config.serpapi_apikey)
         self.analyzer_service = JobAnalyzer(gemini_api_key=config.gemini_api_key)
 
-    def search_for_jobs(self) -> tuple[GoogleSearchMetadata, list[GoogleSearchOrganicResult]]:
+    def search_for_jobs(self) -> dict[str, GoogleSearchMetadata | list[GoogleSearchOrganicResult]] | dict[str, str]:
         """Searches for jobs
 
-        Returns: a tuple containing the metadata of the searches executed and the
+        Returns: a tuple containing the metadata of the searches executed and the results,
+                    or a dict with an error message if the search fails
 
         """
-        search_results = self.search_service.execute_search(self.config.search_config, self.config.search_max_pages)
+        try:
+            search_results = self.search_service.execute_search(self.config.search_config, self.config.search_max_pages)
 
-        # Convert search response to objects
-        search_metadata = GoogleSearchMetadata(session_id=search_results.get("session_id"),
-                                               search_ids=search_results.get("search_ids"),
-                                               query=search_results.get("query"),
-                                               total_pages=search_results.get("total_pages"))
+            # Convert search response to objects
+            search_metadata = GoogleSearchMetadata(session_id=search_results.get("session_id"),
+                                                   search_ids=search_results.get("search_ids"),
+                                                   query=search_results.get("query"),
+                                                   total_pages=search_results.get("total_pages"))
 
-        organic_results = [GoogleSearchOrganicResult(position=result.get("position"),
-                                                     title=result.get("title"), link=result.get("link"),
-                                                     snippet=result.get("snippet"), source=result.get("source"),
-                                                     job_id=sha256(result.get("link").encode('utf-8')).hexdigest())
-                           for result in search_results.get("organic_results")]
+            organic_results = [GoogleSearchOrganicResult(position=result.get("position"),
+                                                         title=result.get("title"), link=result.get("link"),
+                                                         snippet=result.get("snippet"), source=result.get("source"),
+                                                         job_id=sha256(result.get("link").encode('utf-8')).hexdigest())
+                               for result in search_results.get("organic_results")]
 
-        return search_metadata, organic_results
+            return dict(search_metadata=search_metadata, organic_results=organic_results)
+
+        except FailedSearch as e:
+            return dict(error=str(e))
 
     def analyze_job_postings(self, job_postings: list[GoogleSearchOrganicResult]) -> tuple[
         list[GoogleSearchOrganicResult], list[AnalysisFailure]]:

@@ -2,6 +2,7 @@ from uuid import uuid4
 
 import serpapi
 
+from exceptions import FailedSearch
 from models import GoogleSearchQueryConfig
 
 
@@ -53,12 +54,19 @@ class JobSearch:
 
         Returns:
             dict with search metadata and search results
+
+        Raises:
+            FailedSearch: if the search fails
+
         """
         search_query = _build_search_query(query_config)
         params = self._get_search_params(search_query)
 
         # Initialize a search
         search = self.client.search(**params)
+
+        if 'error' in search.data:
+            raise FailedSearch(query=search_query, message=search.data['error'])
 
         organic_results = []
         search_ids = []
