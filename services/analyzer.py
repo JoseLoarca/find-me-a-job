@@ -5,11 +5,10 @@ from google.genai import errors, Client as GeminiClient
 from google.genai.errors import APIError
 from google.genai.types import GenerateContentConfig
 
-from exceptions import AnalyzerError, EvaluationError
+from exceptions import AnalyzerError, EvaluationError, CouldNotReadProfileError
 from models import GoogleSearchOrganicResult, JobPosting, JobFitScore
 
 DEFAULT_GEMINI_MODEL = "gemini-3-flash-preview"
-DEFAULT_PROFILE_FILE_NAME = "my_profile.json"
 
 JOB_ANALYZER_PROMPT = """You are a tech job ingestion and normalization agent in a job hunting automation workflow.
 Your task is to extract, structure, and normalize data from a tech job posting sourced from {source}.
@@ -39,23 +38,9 @@ Job data: {role}
 """
 
 
-def get_current_user_profile() -> dict:
-    """Gets the current user profile. The profile contains all the necessary information (location, work exp,
-    skills, personal preferences, etc.) to evaluate the alignment between current user and a tech role.
-
-    Returns: A dictionary containing the user's profile (location, work experience, skills, etc.)
-
-    """
-    with open(DEFAULT_PROFILE_FILE_NAME) as json_profile:
-        try:
-            return json.load(json_profile)
-        except:
-            return {"error": "Unable to retrieve user's profile", "profile": None}
-
-
 class JobAnalyzer:
 
-    def __init__(self, gemini_api_key: str = None):
+    def __init__(self, gemini_api_key: str = None, profile_path: str = None):
         # Gemini should automatically read the key from env vars, but we should allow to override the key to be used
         # If there's no key in env vars, and no key is manually passed, return an error
         if gemini_api_key:
@@ -66,7 +51,28 @@ class JobAnalyzer:
 
             self.gemini_client = GeminiClient()
 
-    def analyze_job_listing(self, organic_result: GoogleSearchOrganicResult) ->JobPosting:
+        if profile_path:
+            self.profile_path = profile_path
+        else:
+            if not os.getenv('DEFAULT_PROFILE_PATH'):
+                raise Exception("Couldn't initialize JobAnalyzer instance, DEFAULT_PROFILE_PATH not found.")
+            self.profile_path = os.getenv('DEFAULT_PROFILE_PATH')
+
+
+    def get_current_user_profile(self) -> dict:
+        """Gets the current user profile. The profile contains all the necessary information (location, work exp,
+        skills, personal preferences, etc.) to evaluate the alignment between current user and a tech role.
+
+        Returns: A dictionary containing the user's profile (location, work experience, skills, etc.)
+
+        """
+        with open(self.profile_path) as json_profile:
+            try:
+                return json.load(json_profile)
+            except Exception as e:
+                raise CouldNotReadProfileError(path=self.profile_path, message=str(e))
+
+    def analyze_job_listing(self, organic_result: GoogleSearchOrganicResult) -> JobPosting:
         """Analyzes a job listing obtained from a Google Search using only its link.
 
         Args:
@@ -78,6 +84,9 @@ class JobAnalyzer:
             AnalyzerError: if an error occurred while analyzing the job listing
 
         """
+        # @TODO: remove this
+        # print('Analyzing: ', organic_result.link, organic_result.title)
+
         try:
             response = self.gemini_client.models.generate_content(
                 model=DEFAULT_GEMINI_MODEL,
@@ -89,13 +98,19 @@ class JobAnalyzer:
                 )
             )
 
+            # @TODO: remove this
+            # for candidate in response.candidates:
+            #     for metadata in candidate.url_context_metadata.url_metadata:
+            #         print('URL: ', metadata.retrieved_url)
+            #         print('Status: ', metadata.url_retrieval_status)
+
             return JobPosting.model_validate_json(response.text)
 
         except errors.APIError as e:
             raise AnalyzerError(job_id=organic_result.job_id, code=e.code, status=e.status, message=e.message)
 
 
-    def evaluate_profile_fit(self, role: JobPosting) -> JobPosting:
+    def evaluate_profile_fit(self, role: JobPosting) -> JobFitScore:
         """Evaluates if the current user is a good fit for a specific role.
 
         Args:
@@ -107,22 +122,19 @@ class JobAnalyzer:
             EvaluationError: if an error occurred while evaluating the role
         """
         try:
-            role_for_eval = role.model_dump_json(exclude={"job_id", "job_link", "fit_score", "fit_assessment_feedback"})
+            role_for_eval = role.model_dump_json(exclude={"id", "link"})
 
             response = self.gemini_client.models.generate_content(
                 model=DEFAULT_GEMINI_MODEL,
                 contents=PROFILE_ANALYZER_PROMPT.format(role=role_for_eval),
                 config=GenerateContentConfig(
-                    tools=[get_current_user_profile],
+                    tools=[self.get_current_user_profile],
                     response_mime_type="application/json",
                     response_json_schema=JobFitScore.model_json_schema()
                 )
             )
 
-            evaluation = JobFitScore.model_validate_json(response.text)
-
-            return role.model_copy(update={"fit_score": evaluation.fit_score,
-                                           "fit_assessment_feedback": evaluation.fit_assessment_feedback})
+            return JobFitScore.model_validate_json(response.text)
 
         except APIError as e:
-            raise EvaluationError(job_id=role.job_id, code=e.code, status=e.status, message=e.message)
+            raise EvaluationError(job_id=role.id, code=e.code, status=e.status, message=e.message)
