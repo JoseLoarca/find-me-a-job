@@ -7,6 +7,7 @@ from google.genai.types import GenerateContentConfig
 from exceptions import EvaluationError
 from models import JobPosting, JobFitScore
 from .helpers import get_current_user_profile
+from .interface import ProfileEvaluator
 
 EVALUATOR_PROMPT = """You are a tech job fit evaluation agent in a job hunting automation workflow. 
 Your task is to evaluate the alignment between the current user profile and a specific tech role. 
@@ -29,7 +30,7 @@ Job data: {role}
 """
 
 
-class GeminiEvaluator:
+class GeminiEvaluator(ProfileEvaluator):
 
     def __init__(self, gemini_api_key: str = None):
         # Gemini should automatically read the key from env vars, but we should allow to override the key to be used
