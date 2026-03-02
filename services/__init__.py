@@ -1,2 +1,2 @@
-from .search import JobSearch
-from .analyzer import JobAnalyzer
+from .analyze.interface import JobListingAnalyzer
+from .evaluate.interface import ProfileEvaluator

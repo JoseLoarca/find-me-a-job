@@ -3,18 +3,20 @@ from hashlib import sha256
 from exceptions import AnalyzerError, FailedSearch
 from models import AppConfig, GoogleSearchMetadata, GoogleSearchOrganicResult, JobPosting, AnalysisFailure, \
     EvaluationFailure, JobFitScore
-from services import JobSearch, JobAnalyzer
+from services import JobSearch, JobListingAnalyzer, ProfileEvaluator
 from storage import JobStorage
 
 
 class Orchestrator:
 
-    def __init__(self, config: AppConfig, storage: JobStorage):
+    def __init__(self, config: AppConfig, storage: JobStorage, analyzer_service: JobListingAnalyzer,
+                 evaluator_service: ProfileEvaluator):
         # Initialize services
         self.config = config
         self.storage = storage
         self.search_service = JobSearch(config.serpapi_apikey)
-        self.analyzer_service = JobAnalyzer(gemini_api_key=config.gemini_api_key)
+        self.analyzer_service = analyzer_service
+        self.evaluator_service = evaluator_service
 
     def search_for_jobs(self) -> dict[str, GoogleSearchMetadata | list[GoogleSearchOrganicResult]] | dict[str, str]:
         """Searches for jobs
@@ -80,7 +82,7 @@ class Orchestrator:
 
         for job in job_postings:
             try:
-                eval_result = self.analyzer_service.evaluate_profile_fit(job)
+                eval_result = self.evaluator_service.evaluate_profile_fit(job)
                 evald.append(eval_result)
             except AnalyzerError as e:
                 failures.append(EvaluationFailure(job=job, message=str(e)))
