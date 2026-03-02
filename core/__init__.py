@@ -2,7 +2,7 @@ from hashlib import sha256
 
 from exceptions import AnalyzerError, FailedSearch
 from models import AppConfig, GoogleSearchMetadata, GoogleSearchOrganicResult, JobPosting, AnalysisFailure, \
-    EvaluationFailure
+    EvaluationFailure, JobFitScore
 from services import JobSearch, JobAnalyzer
 from storage import JobStorage
 
@@ -44,7 +44,7 @@ class Orchestrator:
             return dict(error=str(e))
 
     def analyze_job_postings(self, job_postings: list[GoogleSearchOrganicResult]) -> tuple[
-        list[GoogleSearchOrganicResult], list[AnalysisFailure]]:
+        list[JobPosting], list[AnalysisFailure]]:
         """Analyze, extract, and enrich Google Search results
 
         Args:
@@ -66,7 +66,7 @@ class Orchestrator:
 
         return enriched, failures
 
-    def evaluate_profile_fit(self, job_postings: list[JobPosting]) -> tuple[list[JobPosting], list[EvaluationFailure]]:
+    def evaluate_profile_fit(self, job_postings: list[JobPosting]) -> tuple[list[JobFitScore], list[EvaluationFailure]]:
         """Run profile evaluation on job postings.
 
         Args:
@@ -88,8 +88,21 @@ class Orchestrator:
 
         return evald, failures
 
+    def save_search_results(self, metadata: GoogleSearchMetadata,
+                            search_results: list[GoogleSearchOrganicResult]) -> None:
+        """Stores job postings search results
+
+        Args:
+            metadata: search metadata
+            search_results: lists of job postings search results (unprocessed)
+
+        Returns: None
+
+        """
+        self.storage.save_search_results(metadata, search_results)
+
     def save_jobs(self, job_postings: list[JobPosting]) -> None:
-        """Stores job postings
+        """Stores enriched job postings
 
         Args:
             job_postings: lists of job postings
@@ -97,4 +110,15 @@ class Orchestrator:
         Returns: None
 
         """
-        self.storage.save_all(job_postings)
+        self.storage.save_jobs(job_postings)
+
+    def save_evaluations(self, evaluations: list[JobFitScore]) -> None:
+        """Stores job postings evaluation results
+
+        Args:
+            evaluations: lists of job postings evaluation results
+
+        Returns: None
+
+        """
+        self.storage.save_evaluations(evaluations)

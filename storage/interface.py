@@ -1,12 +1,20 @@
 from abc import ABC, abstractmethod
 
-from models import JobPosting
+from models import JobPosting, JobFitScore, GoogleSearchMetadata, GoogleSearchOrganicResult
 
 
 class JobStorage(ABC):
 
     @abstractmethod
-    def save_all(self, jobs: list[JobPosting]) -> None:
+    def save_search_results(self, metadata: GoogleSearchMetadata, results: list[GoogleSearchOrganicResult]) -> None:
+        pass
+
+    @abstractmethod
+    def save_jobs(self, jobs: list[JobPosting]) -> None:
+        pass
+
+    @abstractmethod
+    def save_evaluations(self, evaluations: list[JobFitScore]) -> None:
         pass
 
     @abstractmethod

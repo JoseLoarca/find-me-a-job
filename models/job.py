@@ -35,7 +35,8 @@ class JobRole(BaseModel):
     seniority: Literal["junior", "mid", "senior", "staff", "principal", "lead"] = Field(description="Role seniority.")
 
 class JobPosting(BaseModel):
-    id: str = Field(description="Unique identifier of the job.")
+    id: str = Field(description="Unique identifier of the job which corresponds to the 'job_id' field from "
+                                "the pre-enrichment step.")
     source: str = Field(description="Source of the job posting.")
     link: str = Field(description="Link to the job posting.")
 
@@ -53,6 +54,7 @@ class JobPosting(BaseModel):
 
 
 class JobFitScore(BaseModel):
+    id: str = Field(description="Unique identifier of the role that was evaluated.")
     fit_score: int = Field(description="Represents the fit score of the user profile and a specific role, "
                                        "from 0 to 100.", ge=0, le=100)
     fit_assessment_feedback: str = Field(description="Further elaborates on the fit score. For example, "

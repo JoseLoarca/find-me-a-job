@@ -122,7 +122,7 @@ class JobAnalyzer:
             EvaluationError: if an error occurred while evaluating the role
         """
         try:
-            role_for_eval = role.model_dump_json(exclude={"id", "link"})
+            role_for_eval = role.model_dump_json(exclude={"link"})
 
             response = self.gemini_client.models.generate_content(
                 model=DEFAULT_GEMINI_MODEL,
@@ -133,6 +133,10 @@ class JobAnalyzer:
                     response_json_schema=JobFitScore.model_json_schema()
                 )
             )
+
+            # @TODO:
+            # there are non-text parts in the response: ['function_call'], returning concatenated text result from
+            # text parts. Check the full candidates.content.parts accessor to get the full model response.
 
             return JobFitScore.model_validate_json(response.text)
 
