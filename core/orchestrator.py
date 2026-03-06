@@ -1,12 +1,14 @@
 from hashlib import sha256
 from typing import Optional
 
+from core import get_session_logger
 from exceptions import AnalyzerError, EvaluationError, FailedSearch
 from models import AppConfig, GoogleSearchMetadata, GoogleSearchOrganicResult, JobPosting, AnalysisFailure, \
     EvaluationFailure, JobFitScore
 from services import JobSearch, JobListingAnalyzer, ProfileEvaluator
 from storage import JobStorage
 
+logger = get_session_logger()
 
 class Orchestrator:
 
@@ -18,6 +20,7 @@ class Orchestrator:
 
         # *** Make sure analyzer service is set if evaluator service is set ***
         if evaluator_service and not analyzer_service:
+            logger.error(f"Evaluation requires analyzer service.")
             raise ValueError("Evaluation requires analyzer service.")
 
         # *** Initialize services ***
@@ -52,6 +55,7 @@ class Orchestrator:
             return dict(search_metadata=search_metadata, organic_results=organic_results)
 
         except FailedSearch as e:
+            logger.error(f"Search failed: {e}. Search configuration: {self.config.search_config}")
             return dict(error=str(e))
 
     def analyze_job_postings(self, job_postings: list[GoogleSearchOrganicResult]) -> tuple[
@@ -72,6 +76,7 @@ class Orchestrator:
                 analysis_result = self.analyzer_service.analyze_job_listing(job)
                 enriched.append(analysis_result)
             except AnalyzerError as e:
+                logger.error(f"Analyzer failed: {e}. Analysis service: {self.config.analyzer_service}")
                 failures.append(AnalysisFailure(job=job, message=str(e)))
                 continue
 
@@ -94,6 +99,7 @@ class Orchestrator:
                 eval_result = self.evaluator_service.evaluate_profile_fit(job)
                 evald.append(eval_result)
             except EvaluationError as e:
+                logger.error(f"Evaluator failed: {e}. Evaluation service: {self.config.evaluator_service}")
                 failures.append(EvaluationFailure(job=job, message=str(e)))
                 continue
 
@@ -134,6 +140,17 @@ class Orchestrator:
         """
         self.storage.save_evaluations(evaluations)
 
+    def save(self, collection: str, data: list[dict]) -> None:
+        """This is a general save method.
+
+        Args:
+            collection: collection name
+            data: data to be saved
+
+        Returns: None
+
+        """
+        self.storage.save(collection, data)
 
     def run_pipeline(self) -> dict:
         """Execute pipeline dynamically based on configured services.
@@ -163,12 +180,14 @@ class Orchestrator:
         if self.analyzer_service:
             enriched, analysis_failures = self.analyze_job_postings(organic_results)
             self.save_jobs(enriched)
+            self.save(self.config.analyzer_service + 'analysis_failures', [failure.model_dump() for failure in analysis_failures])
 
             # 3. EVALUATE_ optional, we can't evaluate raw search results so this will only happen if
             # the eval service is set AND enriched data is available.
             if self.evaluator_service and enriched:
                 evaluations, evaluation_failures = self.evaluate_profile_fit(enriched)
                 self.save_evaluations(evaluations)
+                self.save(self.config.analyzer_service + 'evaluation_failures', [failure.model_dump() for failure in evaluation_failures])
 
         return {
             "search_metadata": metadata,

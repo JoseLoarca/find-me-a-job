@@ -2,17 +2,20 @@ import os
 
 from pymongo import MongoClient
 
+from core import get_session_logger
 from models import AppConfig
 
+logger = get_session_logger()
 
 def _mongo_health_check() -> bool:
     try:
+        logger.info("Starting Mongo Health Check")
         client = MongoClient(os.getenv("MONGODB_CONN"), serverSelectionTimeoutMS=3000)
         client.admin.command("ping")
         client.close()
         return True
     except Exception as e:
-        print('Mongo health check failed: ', e)
+        logger.error('Mongo health check failed: ', e)
         return False
 
 
@@ -22,7 +25,8 @@ class HealthChecker:
         self.config = config
 
     def run(self) -> dict[str, bool]:
-        # Search always required
+        logger.info("Starting Health Check")
+        # Search always checked
         checks = {"serpapi": bool(self.config.serpapi_apikey)}
 
         # Shared Gemini availability (from config or env)
@@ -44,7 +48,3 @@ class HealthChecker:
             checks["mongo_conn"] = _mongo_health_check()
 
         return checks
-
-    def is_healthy(self) -> bool:
-        results = self.run()
-        return all(results.values())
