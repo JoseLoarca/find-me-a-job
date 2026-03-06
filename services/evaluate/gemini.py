@@ -9,6 +9,7 @@ from logger import get_session_logger
 from models import JobPosting, JobFitScore, AppConfig
 from .helpers import get_current_user_profile
 from .interface import ProfileEvaluator
+from ..gemini.rate_limiter import RateLimiter
 
 EVALUATOR_PROMPT = """You are a tech job fit evaluation agent in a job hunting automation workflow. 
 Your task is to evaluate the alignment between the current user profile and a specific tech role. 
@@ -31,6 +32,7 @@ Job data: {role}
 """
 
 logger = get_session_logger()
+rate_limiter = RateLimiter(int(os.getenv("GEMINI_DEFAULT_RPM")), logger)
 
 class GeminiEvaluator(ProfileEvaluator):
 
@@ -67,6 +69,7 @@ class GeminiEvaluator(ProfileEvaluator):
         try:
             role_for_eval = role.model_dump_json(exclude={"link"})
 
+            rate_limiter.wait()
             response = self.gemini_client.models.generate_content(
                 model=self.gemini_default_model,
                 contents=EVALUATOR_PROMPT.format(role=role_for_eval),

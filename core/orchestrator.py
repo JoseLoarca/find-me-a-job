@@ -73,6 +73,7 @@ class Orchestrator:
 
         for job in job_postings:
             try:
+                # @TODO: implement a delay to avoid hitting max RPM?
                 analysis_result = self.analyzer_service.analyze_job_listing(job)
                 enriched.append(analysis_result)
             except AnalyzerError as e:
@@ -180,14 +181,14 @@ class Orchestrator:
         if self.analyzer_service:
             enriched, analysis_failures = self.analyze_job_postings(organic_results)
             self.save_jobs(enriched)
-            self.save(self.config.analyzer_service + 'analysis_failures', [failure.model_dump() for failure in analysis_failures])
+            self.save(self.config.analyzer_service + '_analysis_failures', [failure.model_dump() for failure in analysis_failures])
 
             # 3. EVALUATE_ optional, we can't evaluate raw search results so this will only happen if
             # the eval service is set AND enriched data is available.
             if self.evaluator_service and enriched:
                 evaluations, evaluation_failures = self.evaluate_profile_fit(enriched)
                 self.save_evaluations(evaluations)
-                self.save(self.config.analyzer_service + 'evaluation_failures', [failure.model_dump() for failure in evaluation_failures])
+                self.save(self.config.analyzer_service + '_evaluation_failures', [failure.model_dump() for failure in evaluation_failures])
 
         return {
             "search_metadata": metadata,

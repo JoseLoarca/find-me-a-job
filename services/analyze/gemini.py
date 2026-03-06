@@ -9,6 +9,7 @@ from exceptions import AnalyzerError
 from logger import get_session_logger
 from models import GoogleSearchOrganicResult, JobPosting, AppConfig
 from .interface import JobListingAnalyzer
+from ..gemini.rate_limiter import RateLimiter
 
 JOB_ANALYZER_PROMPT = """You are a tech job ingestion and normalization agent in a job hunting automation workflow.
 Your task is to extract, structure, and normalize data from a tech job posting sourced from {source}.
@@ -18,6 +19,7 @@ Job posting link: {job_link}
 """
 
 logger = get_session_logger()
+rate_limiter = RateLimiter(int(os.getenv("GEMINI_DEFAULT_RPM")), logger)
 
 
 class GeminiAnalyzer(JobListingAnalyzer):
@@ -55,6 +57,7 @@ class GeminiAnalyzer(JobListingAnalyzer):
         logger.debug(f"Analyzing: {organic_result.link} - {organic_result.title}")
 
         try:
+            rate_limiter.wait()
             response = self.gemini_client.models.generate_content(
                 model=self.gemini_default_model,
                 contents=JOB_ANALYZER_PROMPT.format(source=organic_result.source, job_link=organic_result.link),
@@ -65,11 +68,11 @@ class GeminiAnalyzer(JobListingAnalyzer):
                 )
             )
 
-            if logger.isEnabledFor(DEBUG):
+            if logger.isEnabledFor(DEBUG):  # Debug URL retrieval
                 for candidate in response.candidates:
                     for metadata in candidate.url_context_metadata.url_metadata:
-                        logger.debug(f"URL: {metadata.retrieved_url}")
-                        logger.debug(f"Status: {metadata.url_retrieval_status}")
+                        # In some scenarios, the exact URL can't be accessed and Gemini returns random information
+                        logger.debug(f"Retrieval status: {metadata.url_retrieval_status}")
 
             return JobPosting.model_validate_json(response.text)
 

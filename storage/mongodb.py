@@ -26,7 +26,7 @@ class MongoDBStorage(JobStorage):
         results_as_dict = [res.model_dump() for res in results]
         doc = dict(metadata=metadata.model_dump(), results=results_as_dict)
         self.db['search_results'].insert_one(doc)
-        logger.info(f"Saved {len(results)} search results .")
+        logger.info(f"Saved {len(results)} search results.")
 
     def save_jobs(self, jobs: list[JobPosting]) -> None:
         if not jobs:
