@@ -5,7 +5,7 @@ from google.genai.errors import APIError
 from google.genai.types import GenerateContentConfig
 
 from exceptions import AnalyzerError
-from models import GoogleSearchOrganicResult, JobPosting
+from models import GoogleSearchOrganicResult, JobPosting, AppConfig
 from .interface import JobListingAnalyzer
 
 JOB_ANALYZER_PROMPT = """You are a tech job ingestion and normalization agent in a job hunting automation workflow.
@@ -18,11 +18,11 @@ Job posting link: {job_link}
 
 class GeminiAnalyzer(JobListingAnalyzer):
 
-    def __init__(self, gemini_api_key: str = None):
+    def __init__(self, config: AppConfig):
         # Gemini should automatically read the key from env vars, but we should allow to override the key to be used
         # If there's no key in env vars, and no key is manually passed, return an error
-        if gemini_api_key:
-            self.gemini_client = GeminiClient(api_key=gemini_api_key)
+        if config.gemini_api_key:
+            self.gemini_client = GeminiClient(api_key=config.gemini_api_key)
         else:
             if not os.getenv('GEMINI_API_KEY'):
                 raise Exception("Couldn't initialize Gemini client, GEMINI_API_KEY not found.")
