@@ -6,6 +6,10 @@ from models import JobPosting, JobFitScore, GoogleSearchMetadata, GoogleSearchOr
 class JobStorage(ABC):
 
     @abstractmethod
+    def save(self, collection: str, data: list[dict]) -> None:
+        pass
+
+    @abstractmethod
     def save_search_results(self, metadata: GoogleSearchMetadata, results: list[GoogleSearchOrganicResult]) -> None:
         pass
 

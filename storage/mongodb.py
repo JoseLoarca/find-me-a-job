@@ -1,13 +1,18 @@
 from pymongo import MongoClient
 from .interface import JobStorage
-from models import JobPosting, JobFitScore, GoogleSearchMetadata, GoogleSearchOrganicResult
+from models import JobPosting, JobFitScore, GoogleSearchMetadata, GoogleSearchOrganicResult, AppConfig
 
 
 class MongoDBStorage(JobStorage):
 
-    def __init__(self, uri: str, db_name: str):
-        self.client = MongoClient(uri)
-        self.db = self.client[db_name]
+    def __init__(self, config: AppConfig):
+        self.client = MongoClient(config.mongodb_uri)
+        self.db = self.client[config.mongodb_dbname]
+
+    def save(self, collection: str, data: list[dict]) -> None:
+        if not data:
+            return
+        self.db[collection].insert_many(data)
 
     def save_search_results(self, metadata: GoogleSearchMetadata, results: list[GoogleSearchOrganicResult]) -> None:
         if not metadata or not results:

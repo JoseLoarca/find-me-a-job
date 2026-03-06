@@ -3,6 +3,9 @@ from storage.interface import JobStorage
 
 
 class DynamoDBStorage(JobStorage):
+    def save(self, collection: str, data: list[dict]) -> None:
+        pass
+
     def save_search_results(self, metadata: GoogleSearchMetadata, results: list[GoogleSearchOrganicResult]) -> None:
         pass
 
