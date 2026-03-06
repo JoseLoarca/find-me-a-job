@@ -21,6 +21,7 @@ class AppConfig(BaseModel):
     analyzer_service: str | None = "gemini"
     evaluator_service: str | None = "gemini"
 
-    # API Keys
+    # Service specific configuration fields
     gemini_api_key: str | None = None
-
+    mongodb_uri: str | None = None
+    mongodb_dbname: str | None = None
