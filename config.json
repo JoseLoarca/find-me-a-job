@@ -1,0 +1,26 @@
+{
+  "keywords": "software engineer",
+  "sites": [
+    "job-boards.greenhouse.io",
+    "jobs.ashbyhq.com"
+  ],
+  "exclude": [
+    "fullstack",
+    "full-stack",
+    "full stack",
+    "new grad",
+    "intern",
+    "internship",
+    "graduate",
+    "graduates",
+    "bachelor",
+    "principal",
+    "staff",
+    "lead",
+    "latam",
+    "south america",
+    "jobgether"
+  ],
+  "from_date": "2026-03-03",
+  "to_date": "2026-03-05"
+}
