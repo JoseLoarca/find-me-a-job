@@ -5,6 +5,7 @@ from google.genai.errors import APIError
 from google.genai.types import GenerateContentConfig
 
 from exceptions import EvaluationError
+from logger import get_session_logger
 from models import JobPosting, JobFitScore, AppConfig
 from .helpers import get_current_user_profile
 from .interface import ProfileEvaluator
@@ -29,6 +30,7 @@ These are your operating principles:
 Job data: {role}
 """
 
+logger = get_session_logger()
 
 class GeminiEvaluator(ProfileEvaluator):
 
@@ -39,11 +41,13 @@ class GeminiEvaluator(ProfileEvaluator):
             self.gemini_client = GeminiClient(api_key=config.gemini_api_key)
         else:
             if not os.getenv('GEMINI_API_KEY'):
+                logger.error("Couldn't initialize Gemini client, GEMINI_API_KEY not found.")
                 raise Exception("Couldn't initialize Gemini client, GEMINI_API_KEY not found.")
 
             self.gemini_client = GeminiClient()
 
         if not os.getenv('GEMINI_DEFAULT_MODEL'):
+            logger.error("Couldn't initialize Gemini client, GEMINI_DEFAULT_MODEL not found.")
             raise Exception("Couldn't initialize Gemini client, GEMINI_DEFAULT_MODE not found.")
 
         self.gemini_default_model = os.getenv('GEMINI_DEFAULT_MODEL')
@@ -80,4 +84,5 @@ class GeminiEvaluator(ProfileEvaluator):
             return JobFitScore.model_validate_json(response.text)
 
         except APIError as e:
+            logger.error(f"Gemini failed with error {e.message}, status {e.status} and code {e.code}.")
             raise EvaluationError(job_id=role.id, code=e.code, status=e.status, message=e.message)

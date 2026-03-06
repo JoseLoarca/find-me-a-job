@@ -1,8 +1,8 @@
 from hashlib import sha256
 from typing import Optional
 
-from core import get_session_logger
 from exceptions import AnalyzerError, EvaluationError, FailedSearch
+from logger import get_session_logger
 from models import AppConfig, GoogleSearchMetadata, GoogleSearchOrganicResult, JobPosting, AnalysisFailure, \
     EvaluationFailure, JobFitScore
 from services import JobSearch, JobListingAnalyzer, ProfileEvaluator

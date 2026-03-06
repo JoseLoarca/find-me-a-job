@@ -1,4 +1,4 @@
-from core import get_session_logger
+from logger import get_session_logger
 from .flow import run_flow
 
 

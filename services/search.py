@@ -3,7 +3,10 @@ from uuid import uuid4
 import serpapi
 
 from exceptions import FailedSearch
+from logger import get_session_logger
 from models import GoogleSearchQueryConfig
+
+logger = get_session_logger()
 
 
 def _build_search_query(query_config: GoogleSearchQueryConfig) -> str:
@@ -63,9 +66,11 @@ class JobSearch:
         params = self._get_search_params(search_query)
 
         # Initialize a search
+        logger.info(f"Performing Google Search with search query: {search_query}")
         search = self.client.search(**params)
 
         if 'error' in search.data:
+            logger.error(f"Google Search failed with error: {search.data['error']}")
             raise FailedSearch(query=search_query, message=search.data['error'])
 
         organic_results = []

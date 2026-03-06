@@ -8,7 +8,7 @@ from core.registry import (
     STORAGE_REGISTRY,
 )
 from core.orchestrator import Orchestrator
-from core.logger import get_session_logger
+from logger import get_session_logger
 from models import GoogleSearchQueryConfig, AppConfig
 
 logger = get_session_logger()

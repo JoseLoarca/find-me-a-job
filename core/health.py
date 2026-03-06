@@ -2,7 +2,7 @@ import os
 
 from pymongo import MongoClient
 
-from core import get_session_logger
+from logger import get_session_logger
 from models import AppConfig
 
 logger = get_session_logger()

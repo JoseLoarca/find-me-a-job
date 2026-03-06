@@ -1,6 +1,6 @@
+from datetime import datetime
 from logging import Logger, getLogger, DEBUG, Formatter, FileHandler, StreamHandler
 from pathlib import Path
-from datetime import datetime
 
 _logger_instance = None  # singleton
 
@@ -25,7 +25,7 @@ def get_session_logger() -> Logger:
     # Prevent duplicate handlers
     if not logger.handlers:
         formatter = Formatter(
-            "%(asctime)s | %(levelname)s | %(name)s | %(message)s"
+            "%(asctime)s | %(levelname)s | %(module)s.%(funcName)s: %(message)s"
         )
 
         file_handler = FileHandler(logfile)
