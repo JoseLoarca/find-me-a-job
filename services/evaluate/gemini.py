@@ -27,6 +27,7 @@ These are your operating principles:
 - Base all reasoning on observable fields.
 - Maintain neutral, non-advisory language.
 - If the data provided is insufficient, default the score to 0, and explain in the feedback that the evaluation was not possible.
+- If the role is outside the US, the fit score is an automatic 0.
 
 Job data: {role}
 """
@@ -68,6 +69,7 @@ class GeminiEvaluator(ProfileEvaluator):
         """
         try:
             role_for_eval = role.model_dump_json(exclude={"link"})
+            logger.debug(f"Evaluating: {role.role.title} @ {role.org.name} ({role.link})")
 
             rate_limiter.wait()
             response = self.gemini_client.models.generate_content(
