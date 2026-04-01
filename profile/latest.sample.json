@@ -1,0 +1,66 @@
+{
+  "id": "latest-profile-v1",
+  "roles": {
+    "categories": [
+      "software_development",
+      "backend_engineering",
+      "support_engineering",
+      "solutions_engineering"
+    ],
+    "seniority_target": [
+      "staff"
+    ]
+  },
+  "location": {
+    "remote_ok": true,
+    "regions_ok": [
+      "global",
+      "u.s.",
+      "california",
+      "san diego"
+    ],
+    "onsite_max_distance_km": 80
+  },
+  "compensation": {
+    "min_usd": 180000,
+    "target_usd": 270000,
+    "ideal_usd": 225000
+  },
+  "tech": [
+    "go",
+    "rust",
+    "python",
+    "javascript",
+    "typescript"
+  ],
+  "skills": [
+    "backend_api_design",
+    "microservices",
+    "documentation",
+    "mentoring"
+  ],
+  "domains": [
+    "healthcare",
+    "ecommerce"
+  ],
+  "constraints": {
+    "work_auth_us": true,
+    "visa_sponsorship_required": false,
+    "speficic_location_required": false
+  },
+  "dealbreakers": [
+    "pure_frontend"
+  ],
+  "negative_signals": [
+    "entry_level_only",
+    "non_backend_roles"
+  ],
+  "signals": {
+    "experience_years": 10,
+    "degree": "masters_cs",
+    "languages": [
+      "english",
+      "spanish"
+    ]
+  }
+}

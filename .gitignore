@@ -1,3 +1,10 @@
+# Added by me
+.idea/
+findmeajob.sqlite
+profile/latest.json
+samples/
+playground.py
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
