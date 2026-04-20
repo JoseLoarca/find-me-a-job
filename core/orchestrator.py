@@ -1,7 +1,7 @@
 from hashlib import sha256
 from typing import Optional
 
-from exceptions import AnalyzerError, EvaluationError, FailedSearch
+from exceptions import FailedSearch, BaseServiceException
 from logger import get_session_logger
 from models import AppConfig, GoogleSearchMetadata, GoogleSearchOrganicResult, JobPosting, AnalysisFailure, \
     EvaluationFailure, JobFitScore
@@ -76,7 +76,7 @@ class Orchestrator:
                 # @TODO: implement a delay to avoid hitting max RPM?
                 analysis_result = self.analyzer_service.analyze_job_listing(job)
                 enriched.append(analysis_result)
-            except AnalyzerError as e:
+            except BaseServiceException as e:
                 logger.error(f"Analyzer failed: {e}. Analysis service: {self.config.analyzer_service}")
                 failures.append(AnalysisFailure(job=job, message=str(e)))
                 continue
@@ -99,7 +99,7 @@ class Orchestrator:
             try:
                 eval_result = self.evaluator_service.evaluate_profile_fit(job)
                 evald.append(eval_result)
-            except EvaluationError as e:
+            except BaseServiceException as e:
                 logger.error(f"Evaluator failed: {e}. Evaluation service: {self.config.evaluator_service}")
                 failures.append(EvaluationFailure(job=job, message=str(e)))
                 continue
