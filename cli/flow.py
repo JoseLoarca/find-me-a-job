@@ -79,8 +79,11 @@ def collect_config() -> AppConfig:
     TODO: build the configuration interactively
     """
     logger.info("Building app config. TODO: build the configuration interactively")
-    serpapi_apikey = os.environ.get('SERPAPI_KEY')
+    serpapi_apikey = os.environ.get('SERPAPI_KEY', '')
     search_config = build_query_config_from_json()
+    ollama_evaluator_model = os.getenv('OLLAMA_EVALUATOR_MODEL', '')
+    ollama_evaluator_model_temp = float(os.getenv('OLLAMA_EVALUATOR_MODEL_TEMP', 0.0))
+    evaluator_service = "ollama"  # ["gemini", "ollama"]
 
     return AppConfig(
         serpapi_apikey=serpapi_apikey,
@@ -88,8 +91,10 @@ def collect_config() -> AppConfig:
         search_max_pages=3,
         storage_service="mongodb",
         analyzer_service="gemini",
-        evaluator_service="gemini",
+        evaluator_service=evaluator_service,
         gemini_api_key=None,
         mongodb_uri=os.environ.get('MONGODB_CONN'),
         mongodb_dbname=os.environ.get('MONGODB_DBNAME'),
+        ollama_evaluator_model=ollama_evaluator_model,
+        ollama_evaluator_model_temp=ollama_evaluator_model_temp
     )

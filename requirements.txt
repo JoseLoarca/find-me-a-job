@@ -49,6 +49,7 @@ mistune==3.2.0
 nbclient==0.10.4
 nbconvert==7.17.0
 nbformat==5.10.4
+ollama==0.6.1
 packaging==26.0
 pandocfilters==1.5.1
 parsel==1.11.0

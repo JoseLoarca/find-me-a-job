@@ -25,3 +25,7 @@ class AppConfig(BaseModel):
     gemini_api_key: str | None = None
     mongodb_uri: str | None = None
     mongodb_dbname: str | None = None
+
+    # Ollama
+    ollama_evaluator_model : str | None = None
+    ollama_evaluator_model_temp : float = 0.3
