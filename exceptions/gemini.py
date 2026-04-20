@@ -1,6 +1,6 @@
 from typing import Any
 
-from base import BaseServiceException
+from .base import BaseServiceException
 
 
 class AnalyzerError(BaseServiceException):

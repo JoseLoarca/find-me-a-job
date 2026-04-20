@@ -1,4 +1,4 @@
-from base import BaseServiceException
+from .base import BaseServiceException
 
 
 class OllamaEvaluationError(BaseServiceException):
