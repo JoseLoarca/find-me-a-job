@@ -1,3 +1,4 @@
+from os import getenv
 from datetime import datetime
 from logging import Logger, getLogger, DEBUG, Formatter, FileHandler, StreamHandler
 from pathlib import Path
@@ -20,7 +21,7 @@ def get_session_logger() -> Logger:
 
     # Create logger
     logger = getLogger("findmeajob")
-    logger.setLevel(DEBUG)
+    logger.setLevel(getenv("LOG_LEVEL", DEBUG))
 
     # Prevent duplicate handlers
     if not logger.handlers:
