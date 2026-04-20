@@ -1,42 +1,29 @@
-class GenAIError(Exception):
-    def __init__(
-        self,
-        job_id: str,
-        code: int,
-        status: int | None = None,
-        message: str | None = None,
-        *,
-        action: str
-    ):
-        self.job_id = job_id
-        self.code = code
-        self.status = status
-        self.message = message
-        self.action = action
+from typing import Any
 
-        super().__init__(
-            f"Unable to perform {action} on job {job_id}. "
-            f"genai client failed with code {code}, status {status}, and message {message}"
-        )
+from base import BaseServiceException
 
 
-class AnalyzerError(GenAIError):
-    def __init__(self, job_id: str, code: int, status: int | None = None, message: str | None = None):
+class AnalyzerError(BaseServiceException):
+    def __init__(self, job_id: str, code: int, status: Any | None = None, message: str | None = None, model=str | None):
         super().__init__(
             job_id=job_id,
+            service="gemini",
             code=code,
             status=status,
             message=message,
+            model=model,
             action="analysis"
         )
 
 
-class EvaluationError(GenAIError):
-    def __init__(self, job_id: str, code: int, status: int | None = None, message: str | None = None):
+class EvaluationError(BaseServiceException):
+    def __init__(self, job_id: str, code: int, status: Any | None = None, message: str | None = None, model=str | None):
         super().__init__(
             job_id=job_id,
+            service="gemini",
             code=code,
             status=status,
             message=message,
-            action="fit evaluation"
+            model=model,
+            action="profile evaluation"
         )

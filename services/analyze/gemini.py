@@ -19,7 +19,7 @@ Job posting link: {job_link}
 """
 
 logger = get_session_logger()
-rate_limiter = RateLimiter(int(os.getenv("GEMINI_DEFAULT_RPM")), logger)
+rate_limiter = RateLimiter(int(os.getenv("GEMINI_DEFAULT_RPM", 14)), logger)
 
 
 class GeminiAnalyzer(JobListingAnalyzer):
@@ -78,4 +78,5 @@ class GeminiAnalyzer(JobListingAnalyzer):
 
         except APIError as e:
             logger.error(f"Gemini failed with error {e.message}, status {e.status} and code {e.code}.")
-            raise AnalyzerError(job_id=organic_result.job_id, code=e.code, status=e.status, message=e.message)
+            raise AnalyzerError(job_id=organic_result.job_id, code=e.code, status=e.status, message=e.message,
+                                model=self.gemini_default_model)

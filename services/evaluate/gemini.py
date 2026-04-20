@@ -33,7 +33,8 @@ Job data: {role}
 """
 
 logger = get_session_logger()
-rate_limiter = RateLimiter(int(os.getenv("GEMINI_DEFAULT_RPM")), logger)
+rate_limiter = RateLimiter(int(os.getenv("GEMINI_DEFAULT_RPM", 14)), logger)
+
 
 class GeminiEvaluator(ProfileEvaluator):
 
@@ -54,7 +55,6 @@ class GeminiEvaluator(ProfileEvaluator):
             raise Exception("Couldn't initialize Gemini client, GEMINI_DEFAULT_MODE not found.")
 
         self.gemini_default_model = os.getenv('GEMINI_DEFAULT_MODEL')
-
 
     def evaluate_profile_fit(self, role: JobPosting) -> JobFitScore:
         """Evaluates if the user's profile is a good fit for a specific role.
@@ -90,4 +90,5 @@ class GeminiEvaluator(ProfileEvaluator):
 
         except APIError as e:
             logger.error(f"Gemini failed with error {e.message}, status {e.status} and code {e.code}.")
-            raise EvaluationError(job_id=role.id, code=e.code, status=e.status, message=e.message)
+            raise EvaluationError(job_id=role.id, code=e.code, status=e.status, message=e.message,
+                                  model=self.gemini_default_model)
